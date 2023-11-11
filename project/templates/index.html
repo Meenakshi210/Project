@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Audio Player</title>
+    <style>
+        /* Add some basic styling for thumbnails and grid layout */
+        .thumbnail {
+            max-width: 100px;
+            max-height: 100px;
+            margin-right: 10px;
+        }
+
+        /* Center the audio links and leave a gap around the edges */
+        ul {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(12, 1fr);
+            gap: 20px;
+            margin: 20px; /* Adjust the margin as needed */
+        }
+
+        li {
+            text-align: center;
+        }
+
+        /* Set the background color to lavender */
+        body {
+            background-color: lavender;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Web Audio Player</h1>
+    <ul>
+        <!-- Generate audio file links dynamically -->
+        {% for i in range(1, 49) %}
+            <li>
+                <a href="javascript:void(0);" onclick="playAudio('audio/{{ i }}.mp3', 'image.jpg')">
+                    
+                    <br>
+ <img class="thumbnail" src="{{ url_for('static', filename='image.jpg') }}" alt="Thumbnail">
+                   Play {{ i }}.mp3
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+    <p>
+        <audio id="audio" controls>
+            <source id="audio-source" src="" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        <br>
+        <a href="javascript:void(0);" onclick="playPrevious()">Previous</a> |
+        <a href="javascript:void(0);" onclick="playNext()">Next</a>
+        <br>
+        <a href="javascript:void(0);" onclick="toggleShuffle()">Shuffle: <span id="shuffle-status">On</span></a>
+        <br>
+        <span id="current-audio">Current Audio: </span>
+        <img id="thumbnail-display" class="thumbnail" src="{{ url_for('static', filename='image.jpg') }}" alt="Thumbnail">
+    </p>
+    <script>
+        const audio = document.getElementById('audio');
+        const audioSource = document.getElementById('audio-source');
+        const shuffleStatus = document.getElementById('shuffle-status');
+        const currentAudioDisplay = document.getElementById('current-audio');
+        const thumbnailDisplay = document.getElementById('thumbnail-display');
+        const audioFiles = [
+            {% for i in range(1, 49) %}
+                'audio/{{ i }}.mp3',
+            {% endfor %}
+        ];
+        const commonThumbnail = 'image.jpg';
+        let currentSongIndex = 0;
+        let isShuffled = true;
+
+        function playAudio(audioFile, thumbnailFile) {
+            audioSource.src = audioFile;
+            audio.load();
+            audio.play();
+            currentAudioDisplay.innerHTML = `Current Audio: ${audioFile.split('/').pop()}`;
+            thumbnailDisplay.src = thumbnailFile;
+        }
+
+        function playNext() {
+            if (isShuffled) {
+                currentSongIndex = getRandomIndex();
+            } else {
+                currentSongIndex = (currentSongIndex + 1) % audioFiles.length;
+            }
+            playAudio(audioFiles[currentSongIndex], commonThumbnail);
+        }
+
+        function playPrevious() {
+            if (isShuffled) {
+                currentSongIndex = getRandomIndex();
+            } else {
+                currentSongIndex = (currentSongIndex - 1 + audioFiles.length) % audioFiles.length;
+            }
+            playAudio(audioFiles[currentSongIndex], commonThumbnail);
+        }
+
+        function toggleShuffle() {
+            isShuffled = !isShuffled;
+            shuffleStatus.innerText = isShuffled ? 'On' : 'Off';
+        }
+
+        function getRandomIndex() {
+            let newIndex = currentSongIndex;
+            while (newIndex === currentSongIndex) {
+                newIndex = Math.floor(Math.random() * audioFiles.length);
+            }
+            return newIndex;
+        }
+
+        // Ensure audio playback continues after the first interaction
+        audio.addEventListener('ended', () => {
+            playNext();
+        });
+    </script>
+</body>
+</html>
+
